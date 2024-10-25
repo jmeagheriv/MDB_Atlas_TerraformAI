@@ -1,5 +1,90 @@
 
-resource "mongodbatlas_alert_configuration" "cloud_backup_alert" {
+# Alert for high CPU usage
+resource "mongodbatlas_alert_configuration" "cpu_alert" {
+  project_id = var.atlas_project_id
+  event_type = "OUTSIDE_METRIC_THRESHOLD"
+  enabled    = true
+
+  matcher {
+    field_name = "HOSTNAME_AND_PORT"
+    operator   = "EQUALS"
+    value      = "SECONDARY"
+  }
+
+  metric_threshold {
+    metric_name = "SYSTEM_CPU_USER_NORMALIZED"
+    operator    = "GREATER_THAN"
+    threshold   = 80.0
+    units       = "RAW"
+    mode        = "AVERAGE"
+  }
+
+  notification {
+    type_name     = "GROUP"
+    interval_min  = 5
+    delay_min     = 0
+    sms_enabled   = false
+    email_enabled = true
+  }
+}
+
+# Alert for low disk space
+resource "mongodbatlas_alert_configuration" "disk_space_alert" {
+  project_id = var.atlas_project_id
+  event_type = "OUTSIDE_METRIC_THRESHOLD"
+  enabled    = true
+
+  matcher {
+    field_name = "TYPE_NAME"
+    operator   = "EQUALS"
+    value      = "CLUSTER"
+  }
+
+  metric_threshold {
+    metric_name = "DISK_PARTITION_SPACE_USED_DATA"
+    operator    = "GREATER_THAN"
+    threshold   = 90.0
+    units       = "RAW"
+  }
+
+  notification {
+    type_name     = "EMAIL"
+    interval_min  = 5
+    delay_min     = 0
+    email_address = "your-email@example.com"
+  }
+}
+
+# Alert for replication lag
+resource "mongodbatlas_alert_configuration" "replication_lag_alert" {
+  project_id = var.atlas_project_id
+  event_type = "OUTSIDE_METRIC_THRESHOLD"
+  enabled    = true
+
+  matcher {
+    field_name = "REPLICA_SET_NAME"
+    operator   = "EQUALS"
+    value      = "YOUR_REPLICA_SET_NAME"
+  }
+
+  metric_threshold {
+    metric_name = "REPLICATION_LAG"
+    operator    = "GREATER_THAN"
+    threshold   = 100
+    units       = "RAW"
+  }
+
+  notification {
+    type_name     = "GROUP"
+    interval_min  = 5
+    delay_min     = 0
+    sms_enabled   = false
+    email_enabled = true
+  }
+}
+
+# Alert for backup failure
+resource "mongodbatlas_alert_configuration" "backup_failure_alert" {
   project_id = var.atlas_project_id
   event_type = "BACKUP"
   enabled    = true
@@ -10,25 +95,12 @@ resource "mongodbatlas_alert_configuration" "cloud_backup_alert" {
     value      = "YOUR_CLUSTER_NAME"
   }
 
-  matcher {
-    field_name = "TYPE_NAME"
-    operator   = "EQUALS"
-    value      = "CLUSTER"
-  }
-
   notification {
     type_name     = "GROUP"
     interval_min  = 5
     delay_min     = 0
     sms_enabled   = false
     email_enabled = true
-  }
-
-  notification {
-    type_name    = "EMAIL"
-    interval_min = 5
-    delay_min    = 0
-    email_address = "your-email@example.com"
   }
 
   threshold_config {
@@ -38,6 +110,7 @@ resource "mongodbatlas_alert_configuration" "cloud_backup_alert" {
     metric_name = "BACKUP_HEALTHY"
   }
 }
+
 
 resource "mongodbatlas_cluster" "m40_nvme_cluster" {
   project_id             = var.atlas_project_id
