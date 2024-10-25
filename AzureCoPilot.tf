@@ -20,15 +20,24 @@ resource "mongodbatlas_cluster" "my_m40_nvme_cluster" {
   provider_name = "AWS" # or "GCP", "AZURE" based on your choice
   provider_region_name = "US_WEST_2" # Your preferred region
   num_shards   = 1
-resource "mongodbatlas_alert_configuration" "backup_alert" {
+  replication_factor = 3
+  provider_instance_size_name = "M40_NVME"
+  mongo_db_major_version = "4.4" # or another preferred version
+
+  auto_scaling_disk_gb_enabled = true
+  backup_enabled               = true
+}
+
+
+resource "mongodbatlas_alert_configuration" "example_alert" {
   project_id = "YOUR_PROJECT_ID"
-  event_type = "BACKUP"
+  event_type = "HOST_DOWN"
   enabled    = true
 
   matcher {
     field_name = "TYPE_NAME"
     operator   = "EQUALS"
-    value      = "CLUSTER"
+    value      = "REPLICA_SET_PRIMARY"
   }
 
   notification {
